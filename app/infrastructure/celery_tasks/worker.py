@@ -1,4 +1,4 @@
 from celery import Celery
 
 
-app = Celery('generating_docs')
+app = Celery("generating_docs")

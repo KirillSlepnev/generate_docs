@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any, List
 from datetime import date
 
 
@@ -19,6 +19,7 @@ class ReportStatus(str, Enum):
 @dataclass(frozen=True)
 class ColumnDefinition:
     """Описание колонки в отчете"""
+
     field: str
     header: str
     width: int | None = None
@@ -28,6 +29,7 @@ class ColumnDefinition:
 @dataclass(frozen=True)
 class StylingConfig:
     """Настройки оформления отчета"""
+
     header_bg_color: str | None = None
     header_font_color: str | None = None
     font_size: int | None = None
@@ -37,6 +39,7 @@ class StylingConfig:
 @dataclass(frozen=True)
 class DatabaseSource:
     """Источник данных из БД"""
+
     table: str
     fields: List[str]
     date_field: str
@@ -48,8 +51,9 @@ class DatabaseSource:
 @dataclass(frozen=True)
 class InlineData:
     """Данные, переданные пользователем"""
+
     data: List[Dict[str, Any]]
-    
+
     @property
     def row_count(self) -> int:
         return len(self.data)
