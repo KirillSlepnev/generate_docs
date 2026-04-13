@@ -114,6 +114,7 @@ class Report:
         """Завершена ли задача (успешно или с ошибкой)."""
         return self.status in (ReportStatus.COMPLETED, ReportStatus.FAILED)
 
+    @property
     def can_download(self) -> bool:
         """Можно ли скачать файл (только для COMPLETED с наличием file_key)."""
         return self.status == ReportStatus.COMPLETED and self.file_key is not None

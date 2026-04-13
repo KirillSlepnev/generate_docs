@@ -10,7 +10,7 @@ from app.application.schemas.report_template import (
 
 
 class TemplateService:
-    """Сервис для управления шаблонами отчетов."""
+    """Сервис для управления шаблонами отчетов"""
 
     def __init__(self, repository: ITemplateRepository):
         self._repo = repository
