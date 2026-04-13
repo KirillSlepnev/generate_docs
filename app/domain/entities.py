@@ -21,6 +21,7 @@ class ReportTemplate:
     Не содержит информации об источнике данных — только то,
     как данные должны быть отображены в итоговом файле
 
+    Args:
         user_id: id пользователя, создавшего шаблон
         name: название шаблона
         columns: поля, которые будут использованы в отчете,
@@ -73,18 +74,19 @@ class Report:
     Всегда создается на основе существующего шаблона
     Содержит либо database_source, либо inline_data
 
-    id: id задачи на генерацию
-    user_id: id пользователя, запустившего генерацию
-    template_id: id шаблона отчета
-    status: объекты ReportStatus (PENDING -> PROCESSING -> COMPLETED/FAILED)
-    created_at: время создания задачи
-    database_source: объект DatabaseSource - источник бд
-    inline_data: объект InlineData - источник "сырые данные"
-                database_source и inline_data не могут быть заполнены одновременно
-    started_at: время начала генерации отчета
-    completed_at: время завершения генерации
-    file_key: ключ файла в S3
-    error_message: сообщение об ошибке
+    Args:
+        id: id задачи на генерацию
+        user_id: id пользователя, запустившего генерацию
+        template_id: id шаблона отчета
+        status: объекты ReportStatus (PENDING -> PROCESSING -> COMPLETED/FAILED)
+        created_at: время создания задачи
+        database_source: объект DatabaseSource - источник бд
+        inline_data: объект InlineData - источник "сырые данные"
+                    database_source и inline_data не могут быть заполнены одновременно
+        started_at: время начала генерации отчета
+        completed_at: время завершения генерации
+        file_key: ключ файла в S3
+        error_message: сообщение об ошибке
     """
 
     id: UUID
