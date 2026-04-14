@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     minio_bucket: str = "reports"
     minio_secure: bool = False
 
+    debug = True
+
     class Config:
         env_file = ".env"
 
