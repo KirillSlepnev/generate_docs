@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List
 from uuid import UUID
 
 from app.domain.models.report import Report
@@ -26,8 +25,8 @@ class IReportRepository(ABC):
 
     @abstractmethod
     async def list_by_user(
-        self, user_id: UUID, limit: int = 100, offset: int = 0
-    ) -> List[Report]:
+        self, user_id: UUID, offset: int = 0, limit: int = 100
+    ) -> list[Report]:
         """
         Возвращает список задач, принадлежащих пользователю.
         Поддерживает пагинацию через limit и offset

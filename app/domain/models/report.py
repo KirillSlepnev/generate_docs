@@ -110,19 +110,22 @@ class Report:
         self.error_message = error_message
         self.completed_at = datetime.now(timezone.utc)
 
+    @property
     def is_finished(self) -> bool:
-        """Завершена ли задача (успешно или с ошибкой)."""
+        """Завершена ли задача (успешно или с ошибкой)"""
         return self.status in (ReportStatus.COMPLETED, ReportStatus.FAILED)
 
     @property
     def can_download(self) -> bool:
-        """Можно ли скачать файл (только для COMPLETED с наличием file_key)."""
+        """Можно ли скачать файл (только для COMPLETED с наличием file_key)"""
         return self.status == ReportStatus.COMPLETED and self.file_key is not None
 
+    @property
     def has_database_source(self) -> bool:
-        """Использует ли задача источник данных из БД."""
+        """Использует ли задача источник данных из БД"""
         return self.database_source is not None
 
+    @property
     def has_inline_data(self) -> bool:
-        """Использует ли задача переданные данные."""
+        """Использует ли задача переданные данные"""
         return self.inline_data is not None
