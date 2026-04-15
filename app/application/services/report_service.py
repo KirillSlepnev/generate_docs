@@ -3,7 +3,7 @@ from uuid import UUID
 
 from app.domain.repositories.data_source import IDataSource
 from app.domain.repositories.file_storage import IFileStorage
-from app.domain.repositories.message_queue import IMessageBus
+from app.domain.repositories.message_bus import IMessageBus
 from app.domain.repositories.report import IReportRepository
 from app.domain.repositories.report_template import ITemplateRepository
 from app.application.schemas.report import (
