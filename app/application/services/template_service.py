@@ -88,10 +88,10 @@ class TemplateService:
         await self._repo.update(template)
         return template
 
-    async def delete(self, template_id: UUID) -> None:
+    async def delete(self, template_id: UUID, user_id: UUID) -> None:
         template = await self._repo.get_by_id(template_id)
 
-        if template is None:
+        if template is None or template.user_id != user_id:
             raise ValueError("Template not found")
 
         await self._repo.delete(template_id)
