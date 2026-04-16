@@ -3,6 +3,7 @@ from uuid import UUID
 
 from app.domain.repositories.data_source import IDataSource
 from app.domain.repositories.file_storage import IFileStorage
+from app.domain.repositories.generator import IFileGenerate
 from app.domain.repositories.message_bus import IMessageBus
 from app.domain.repositories.report import IReportRepository
 from app.domain.repositories.report_template import ITemplateRepository
@@ -11,7 +12,12 @@ from app.application.schemas.report import (
     CreateReportFromInlineRequest,
 )
 from app.domain.models.report import Report
-from app.domain.models.value_objects import DatabaseSource, InlineData, ReportStatus
+from app.domain.models.value_objects import (
+    DatabaseSource,
+    InlineData,
+    OutputFormat,
+    ReportStatus,
+)
 
 
 class ReportService:
@@ -24,12 +30,14 @@ class ReportService:
         message_bus: IMessageBus,
         file_storage: IFileStorage,
         data_source: IDataSource,
+        generators: dict[OutputFormat, IFileGenerate],
     ):
         self._template_repo = template_repo
         self._report_repo = report_repo
         self._message_bus = message_bus
         self._file_storage = file_storage
         self._data_source = data_source
+        self._generators = generators
 
     async def create_from_database(
         self, user_id: UUID, request: CreateReportFromDatabaseRequest
@@ -165,17 +173,8 @@ class ReportService:
             raise RuntimeError("Error in report generation", str(e))
 
     async def _generate_file(self, data, columns, output_format, styling) -> bytes:
-        if output_format == "excel":
-            return await self._generate_excel(data, columns, styling)
-        elif output_format == "pdf":
-            return await self._generate_pdf(data, columns, styling)
-        else:
-            raise ValueError(f"Unsupported format: {output_format}")
+        generator = self._generators.get(output_format)
+        if not generator:
+            raise ValueError(f"No generator for format: {output_format}")
 
-    async def _generate_excel(self, data, columns, styling):
-        # TODO: реализовать генерацию Excel
-        pass
-
-    async def _generate_pdf(self, data, columns, styling):
-        # TODO: реализовать генерацию PDF
-        pass
+        return await generator.generate(data=data, columns=columns, styling=styling)
