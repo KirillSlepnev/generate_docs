@@ -7,7 +7,7 @@ from app.infrastructure.database.repositories.report_repository import (
 from app.infrastructure.database.repositories.template_repository import (
     SQLAlchemyTemplateRepository,
 )
-from app.infrastructure.database.session import async_session_maker
+from app.infrastructure.database.dependecies import async_session_maker
 from app.infrastructure.storage.s3_storage import MinioStorage
 from app.infrastructure.data_source.sql_data_source import SQLDataSource
 from app.application.services.report_service import ReportService
