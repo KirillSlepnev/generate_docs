@@ -22,7 +22,8 @@ async def create_template(
     user_id: UUID = Depends(get_user_id),
 ) -> TemplateResponse:
     template = await service.create(user_id, request)
-    return TemplateResponse.model_validate(template)
+    # print(template, type(template))
+    return TemplateResponse.model_validate(template, from_attributes=True)
 
 
 @router.get("/", response_model=TemplateListResponse)
@@ -34,7 +35,9 @@ async def get_list_teplates(
 ) -> TemplateListResponse:
     templates = await service.list_templates(user_id, limit, offset)
     return TemplateListResponse(
-        items=[TemplateResponse.model_validate(t) for t in templates],
+        items=[
+            TemplateResponse.model_validate(t, from_attributes=True) for t in templates
+        ],
         total=len(templates),
         limit=limit,
         offset=offset,
@@ -47,8 +50,12 @@ async def get_template_by_id(
     service: TemplateService = Depends(get_template_service),
     user_id: UUID = Depends(get_user_id),
 ) -> TemplateResponse:
-    template = await service.get(template_id, user_id)
-    return TemplateResponse.model_validate(template)
+    try:
+        template = await service.get(template_id, user_id)
+        return TemplateResponse.model_validate(template, from_attributes=True)
+    except Exception as e:
+        print(str(e))
+        raise
 
 
 @router.put("/{template_id}", response_model=TemplateResponse)
@@ -59,7 +66,7 @@ async def update_template(
     user_id: UUID = Depends(get_user_id),
 ) -> TemplateResponse:
     template = await service.update(template_id, user_id, request)
-    return TemplateResponse.model_validate(template)
+    return TemplateResponse.model_validate(template, from_attributes=True)
 
 
 @router.delete(

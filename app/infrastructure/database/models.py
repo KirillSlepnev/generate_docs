@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import String, DateTime, JSON, Enum as SQLEnum, ForeignKey
+from sqlalchemy import String, JSON, Enum as SQLEnum, ForeignKey, TIMESTAMP
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.domain.models.value_objects import OutputFormat, ReportStatus
@@ -22,10 +22,10 @@ class TemplateModel(Base):
     output_format: Mapped[OutputFormat] = mapped_column(SQLEnum(OutputFormat))
     styling: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc)
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        TIMESTAMP(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
@@ -41,9 +41,9 @@ class ReportModel(Base):
     database_source: Mapped[dict | None] = mapped_column(JSON)
     inline_data: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc)
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
-    started_at: Mapped[datetime | None] = mapped_column(DateTime)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime)
+    started_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     file_key: Mapped[str | None] = mapped_column(String(500))
     error_message: Mapped[str | None] = mapped_column(String)

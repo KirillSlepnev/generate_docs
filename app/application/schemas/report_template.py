@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 from datetime import datetime
 
 from app.domain.models.value_objects import OutputFormat
@@ -12,6 +14,8 @@ class ColumnDefinitionSchema(BaseModel):
     width: int | None = Field(None, description="Ширина колонки")
     format: str | None = Field(None, description="Формат отображения")
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class StylingConfigSchema(BaseModel):
     """Схема для настроек оформления."""
@@ -20,6 +24,8 @@ class StylingConfigSchema(BaseModel):
     header_font_color: str | None = Field(None, description="Цвет шрифта заголовка")
     font_size: int | None = Field(None, description="Размер шрифта")
     orientation: str | None = Field(None, description="Ориентация страницы")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CreateTemplateRequest(BaseModel):
@@ -44,7 +50,7 @@ class UpdateTemplateRequest(BaseModel):
 class TemplateResponse(BaseModel):
     """Ответ с данными шаблона."""
 
-    id: str
+    id: UUID
     name: str
     description: str | None
     columns: list[ColumnDefinitionSchema]
@@ -52,6 +58,12 @@ class TemplateResponse(BaseModel):
     styling: StylingConfigSchema | None
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("id")
+    def serialize_id(self, id: UUID) -> str:
+        return str(id)
 
 
 class TemplateListResponse(BaseModel):

@@ -28,6 +28,7 @@ class SQLAlchemyTemplateRepository(ITemplateRepository):
         )
 
         self._session.add(model)
+        await self._session.commit()
         await self._session.flush()
 
     async def get_by_id(self, template_id: UUID) -> ReportTemplate | None:
@@ -64,10 +65,12 @@ class SQLAlchemyTemplateRepository(ITemplateRepository):
             )
         )
         await self._session.execute(query)
+        await self._session.commit()
 
     async def delete(self, template_id: UUID) -> None:
         stmt = delete(TemplateModel).where(TemplateModel.id == template_id)
         await self._session.execute(stmt)
+        await self._session.commit()
 
     def _to_entity(self, model: TemplateModel) -> ReportTemplate:
         columns = [
