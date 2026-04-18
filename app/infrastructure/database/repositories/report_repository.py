@@ -33,6 +33,7 @@ class SQLAlchemyReportRepository(IReportRepository):
             error_message=report.error_message,
         )
         self._session.add(model)
+        await self._session.commit()
         await self._session.flush()
 
     async def get_by_id(self, report_id: UUID) -> Optional[Report]:
@@ -54,6 +55,7 @@ class SQLAlchemyReportRepository(IReportRepository):
             )
         )
         await self._session.execute(query)
+        await self._session.commit()
 
     async def list_by_user(
         self, user_id: UUID, offset: int = 0, limit: int = 100

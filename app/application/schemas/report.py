@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime, date
 
 from app.domain.models.value_objects import ReportStatus
@@ -42,6 +42,8 @@ class ReportResponse(BaseModel):
     completed_at: datetime | None
     error_message: str | None
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ReportStatusResponse(BaseModel):
     """Ответ со статусом задачи."""
@@ -52,6 +54,8 @@ class ReportStatusResponse(BaseModel):
     started_at: datetime | None
     completed_at: datetime | None
     error_message: str | None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DownloadUrlResponse(BaseModel):

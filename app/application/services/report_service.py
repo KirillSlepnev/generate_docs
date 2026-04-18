@@ -40,7 +40,9 @@ class ReportService:
         self._generators = generators
 
     async def create_from_database(
-        self, user_id: UUID, request: CreateReportFromDatabaseRequest
+        self,
+        request: CreateReportFromDatabaseRequest,
+        user_id: UUID,
     ) -> Report:
         template_id = UUID(request.template_id)
         template = await self._template_repo.get_by_id(template_id)

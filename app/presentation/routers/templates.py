@@ -22,7 +22,6 @@ async def create_template(
     user_id: UUID = Depends(get_user_id),
 ) -> TemplateResponse:
     template = await service.create(user_id, request)
-    # print(template, type(template))
     return TemplateResponse.model_validate(template, from_attributes=True)
 
 
