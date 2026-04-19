@@ -16,13 +16,13 @@ class Settings(BaseSettings):
     celery_broker_url: str = "amqp://guest:guest@rabbitmq:5672//"
     celery_result_backend: str = "redis://redis:6379/1"
 
-    minio_root_user: str = "minioadmin"
-    minio_root_password: str = "minioadmin"
-    minio_endpoint: str = "minio:9000"
-    minio_access_key: str = "minioadmin"
-    minio_secret_key: str = "minioadmin"
-    minio_bucket: str = "reports"
-    minio_secure: bool = False
+    s3_endpoint_url: str = "http://minio:9000"
+    s3_access_key_id: str = "minioadmin"
+    s3_secret_access_key: str = "minioadmin"
+    s3_bucket_name: str = "reports"
+    s3_region: str = "us-east-1"
+    s3_public_endpoint_url: str = "http://localhost:9000"
+    s3_secure: bool = False
 
     debug: bool = True
 

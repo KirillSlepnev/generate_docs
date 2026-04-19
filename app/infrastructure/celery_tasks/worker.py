@@ -13,7 +13,7 @@ from app.infrastructure.database.repositories.template_repository import (
 from app.infrastructure.database.dependecies import scoped_session
 from app.infrastructure.generators.excel_generator import ExcelGenerator
 from app.infrastructure.generators.pdf_generator import PDFGenerator
-from app.infrastructure.storage.s3_storage import MinioStorage
+from app.infrastructure.storage.s3_storage import S3Storage
 from app.infrastructure.data_source.sql_data_source import SQLDataSource
 from app.application.services.report_service import ReportService
 
@@ -25,7 +25,7 @@ async def _generate_report_async(report_id: UUID) -> None:
     async with scoped_session() as session:
         template_repo = SQLAlchemyTemplateRepository(session)
         report_repo = SQLAlchemyReportRepository(session)
-        file_storage = MinioStorage()
+        file_storage = S3Storage()
         data_source = SQLDataSource(session)
 
         generators = {

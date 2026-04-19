@@ -28,7 +28,7 @@ from app.infrastructure.database.repositories.template_repository import (
 )
 from app.infrastructure.generators.excel_generator import ExcelGenerator
 from app.infrastructure.generators.pdf_generator import PDFGenerator
-from app.infrastructure.storage.s3_storage import MinioStorage
+from app.infrastructure.storage.s3_storage import S3Storage
 
 
 engine = create_async_engine(settings.database_url, echo=settings.debug)
@@ -68,7 +68,7 @@ async def get_message_bus_impl() -> IMessageBus:
 
 
 async def get_file_storage_impl() -> IFileStorage:
-    return MinioStorage()
+    return S3Storage()
 
 
 async def get_data_source_impl(

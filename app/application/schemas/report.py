@@ -32,6 +32,37 @@ class CreateReportFromInlineRequest(BaseModel):
     template_id: str = Field(..., description="ID шаблона")
     data: list[dict[str, object]] = Field(..., min_length=1, max_length=10000)
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "template_id": "a628349a-f929-4e42-93db-f18b0fcc19a0",
+                "data": [
+                    {
+                        "product_name": "Ноутбук Lenovo ThinkPad",
+                        "price": 50000,
+                        "quantity": 2,
+                        "in_stock": True,
+                        "created_at": "2026-04-19",
+                    },
+                    {
+                        "product_name": "Мышь Logitech MX Master",
+                        "price": 1500,
+                        "quantity": 5,
+                        "in_stock": True,
+                        "created_at": "2026-04-18",
+                    },
+                    {
+                        "product_name": "Клавиатура Keychron K3",
+                        "price": 3000,
+                        "quantity": 0,
+                        "in_stock": False,
+                        "created_at": "2026-04-17",
+                    },
+                ],
+            }
+        }
+    }
+
 
 class ReportResponse(BaseModel):
     """Ответ с данными о задаче."""
