@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from minio import Minio
 
 from app.domain.repositories.file_storage import IFileStorage
@@ -38,7 +40,7 @@ class MinioStorage(IFileStorage):
             url = self._client.presigned_get_object(
                 bucket_name=self._bucket,
                 object_name=key,
-                expires=expires_in,
+                expires=timedelta(seconds=expires_in),
             )
 
             return url

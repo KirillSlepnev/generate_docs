@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict, Field
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 from datetime import datetime, date
 
 from app.domain.models.value_objects import ReportStatus
@@ -34,8 +36,8 @@ class CreateReportFromInlineRequest(BaseModel):
 class ReportResponse(BaseModel):
     """Ответ с данными о задаче."""
 
-    id: str
-    template_id: str
+    id: UUID
+    template_id: UUID
     status: ReportStatus
     created_at: datetime
     started_at: datetime | None
@@ -43,12 +45,20 @@ class ReportResponse(BaseModel):
     error_message: str | None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("id")
+    def serialize_id(self, id: UUID) -> str:
+        return str(id)
+
+    @field_serializer("template_id")
+    def serialize_template_id(self, template_id: UUID) -> str:
+        return str(template_id)
 
 
 class ReportStatusResponse(BaseModel):
     """Ответ со статусом задачи."""
 
-    id: str
+    id: UUID
     status: ReportStatus
     created_at: datetime
     started_at: datetime | None
@@ -56,6 +66,10 @@ class ReportStatusResponse(BaseModel):
     error_message: str | None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("id")
+    def serialize_id(self, id: UUID) -> str:
+        return str(id)
 
 
 class DownloadUrlResponse(BaseModel):

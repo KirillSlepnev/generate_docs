@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.application.schemas.report_template import (
     CreateTemplateRequest,
@@ -33,6 +33,10 @@ async def get_list_teplates(
     user_id: UUID = Depends(get_user_id),
 ) -> TemplateListResponse:
     templates = await service.list_templates(user_id, limit, offset)
+    if len(templates) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Templates not found"
+        )
     return TemplateListResponse(
         items=[
             TemplateResponse.model_validate(t, from_attributes=True) for t in templates
@@ -49,12 +53,12 @@ async def get_template_by_id(
     service: TemplateService = Depends(get_template_service),
     user_id: UUID = Depends(get_user_id),
 ) -> TemplateResponse:
-    try:
-        template = await service.get(template_id, user_id)
-        return TemplateResponse.model_validate(template, from_attributes=True)
-    except Exception as e:
-        print(str(e))
-        raise
+    template = await service.get(template_id, user_id)
+    if template is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Template not found"
+        )
+    return TemplateResponse.model_validate(template, from_attributes=True)
 
 
 @router.put("/{template_id}", response_model=TemplateResponse)
@@ -65,6 +69,10 @@ async def update_template(
     user_id: UUID = Depends(get_user_id),
 ) -> TemplateResponse:
     template = await service.update(template_id, user_id, request)
+    if template is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Template not found"
+        )
     return TemplateResponse.model_validate(template, from_attributes=True)
 
 

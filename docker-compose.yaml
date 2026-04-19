@@ -59,7 +59,22 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-    command: celery -A app.infrastructure.celery_tasks.celery_bus.celery_app worker --loglevel=info
+    command: celery -A app.infrastructure.celery_tasks.celery_bus.celery_app worker --loglevel=info --pool=solo
+    networks:
+      - report-network
+  
+  flower:
+    image: mher/flower:latest
+    container_name: report-flower
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - FLOWER_PORT=5555
+      - FLOWER_BASIC_AUTH=admin:admin
+    ports:
+      - "5555:5555"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       - report-network
 
@@ -128,6 +143,7 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_SERVER_URL=http://localhost:9000
     ports:
       - "9000:9000"
       - "9001:9001"

@@ -49,11 +49,11 @@ class TemplateService:
 
     async def update(
         self, template_id: UUID, user_id: UUID, request: UpdateTemplateRequest
-    ) -> ReportTemplate:
+    ) -> ReportTemplate | None:
         template = await self._repo.get_by_id(template_id)
 
         if template is None or template.user_id != user_id:
-            raise ValueError("Template not found")
+            return None
 
         if request.columns:
             columns = [
@@ -96,11 +96,11 @@ class TemplateService:
 
         await self._repo.delete(template_id)
 
-    async def get(self, template_id: UUID, user_id: UUID) -> ReportTemplate:
+    async def get(self, template_id: UUID, user_id: UUID) -> ReportTemplate | None:
         template = await self._repo.get_by_id(template_id)
 
         if template is None or template.user_id != user_id:
-            raise ValueError("Template not found")
+            return None
 
         return template
 

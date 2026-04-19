@@ -1,38 +1,59 @@
 from uuid import UUID
+import asyncio
 
-from app.infrastructure.celery_tasks.celery_bus import celery_app
+from celery import shared_task
+
+from app.domain.models.value_objects import OutputFormat
 from app.infrastructure.database.repositories.report_repository import (
     SQLAlchemyReportRepository,
 )
 from app.infrastructure.database.repositories.template_repository import (
     SQLAlchemyTemplateRepository,
 )
-from app.infrastructure.database.dependecies import async_session_maker
+from app.infrastructure.database.dependecies import scoped_session
+from app.infrastructure.generators.excel_generator import ExcelGenerator
+from app.infrastructure.generators.pdf_generator import PDFGenerator
 from app.infrastructure.storage.s3_storage import MinioStorage
 from app.infrastructure.data_source.sql_data_source import SQLDataSource
 from app.application.services.report_service import ReportService
 
 
-@celery_app.task(name="app.infrastructure.celery_tasks.worker.generate_report")
-def generate_report(report_id: str) -> None:
-    import asyncio
+loop = asyncio.get_event_loop()
 
-    async def _run():
-        async with async_session_maker() as session:
-            template_repo = SQLAlchemyTemplateRepository(session)
-            report_repo = SQLAlchemyReportRepository(session)
-            file_storage = MinioStorage()
-            data_source = SQLDataSource()
 
-            service = ReportService(
-                template_repo=template_repo,
-                report_repo=report_repo,
-                message_bus=None,
-                file_storage=file_storage,
-                data_source=data_source,
-            )
+async def _generate_report_async(report_id: UUID) -> None:
+    async with scoped_session() as session:
+        template_repo = SQLAlchemyTemplateRepository(session)
+        report_repo = SQLAlchemyReportRepository(session)
+        file_storage = MinioStorage()
+        data_source = SQLDataSource(session)
 
-            await service.generate(UUID(report_id))
-            await session.commit()
+        generators = {
+            OutputFormat.EXCEL: ExcelGenerator(),
+            OutputFormat.PDF: PDFGenerator(),
+        }
 
-    asyncio.run(_run())
+        service = ReportService(
+            template_repo=template_repo,
+            report_repo=report_repo,
+            message_bus=None,
+            file_storage=file_storage,
+            data_source=data_source,
+            generators=generators,
+        )
+
+        await service.generate(report_id=report_id)
+        await session.commit()
+
+
+@shared_task(
+    bind=True,
+    name="app.infrastructure.celery_tasks.worker.generate_report",
+    max_retries=3,
+    default_retray_delay=60,
+)
+def generate_report_task(self, report_id: str) -> None:
+    try:
+        loop.run_until_complete(_generate_report_async(UUID(report_id)))
+    except Exception as e:
+        self.retry(exc=e)

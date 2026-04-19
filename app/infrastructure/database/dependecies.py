@@ -1,7 +1,14 @@
+from asyncio import current_task
 from typing import AsyncGenerator
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from fastapi.concurrency import asynccontextmanager
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_scoped_session,
+    create_async_engine,
+    async_sessionmaker,
+)
 from app.application.services.report_service import ReportService
 from app.application.services.template_service import TemplateService
 from app.config import settings
@@ -31,6 +38,17 @@ async_session_maker = async_sessionmaker(engine, expire_on_commit=True)
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
+
+
+@asynccontextmanager
+async def scoped_session() -> AsyncGenerator[AsyncSession, None]:
+    """Специальная сессия для Celery (потокобезопасная)"""
+    scoped_factory = async_scoped_session(async_session_maker, scopefunc=current_task)
+    try:
+        async with scoped_factory() as session:
+            yield session
+    finally:
+        await scoped_factory.remove()
 
 
 async def get_template_repository_impl(

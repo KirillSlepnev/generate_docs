@@ -35,6 +35,15 @@ class ExcelGenerator(IFileGenerate):
         output.seek(0)
         return output.getvalue()
 
+    @staticmethod
+    def _to_argb_color(hex_color: str) -> str:
+        """Преобразует RRGGBB в FFRRGGBB."""
+        color = hex_color.lstrip("#")
+        if len(color) == 6:
+            result = "FF" + color
+            return result
+        return color
+
     def _write_headers(
         self,
         ws: Worksheet,
@@ -48,23 +57,25 @@ class ExcelGenerator(IFileGenerate):
 
             if styling:
                 if styling.header_bg_color:
+                    bg_color = self._to_argb_color(styling.header_bg_color)
                     cell.fill = PatternFill(
-                        start_color=styling.header_bg_color.lstrip("#"),
-                        end_color=styling.header_bg_color.lstrip("#"),
+                        start_color=bg_color,
+                        end_color=bg_color,
                         fill_type="solid",
                     )
+
                 if styling.header_font_color:
-                    cell.font = Font(
-                        color=styling.header_font_color.lstrip("#"), bold=True
-                    )
+                    font_color = self._to_argb_color(styling.header_font_color)
+                    cell.font = Font(color=font_color, bold=True)
                 else:
                     cell.font = Font(bold=True)
 
                 if styling.font_size:
                     cell.font = Font(size=styling.font_size, bold=True)
-                else:
-                    cell.font = Font(bold=True)
 
+                cell.alignment = Alignment(horizontal="center")
+            else:
+                cell.font = Font(bold=True)
                 cell.alignment = Alignment(horizontal="center")
 
     def _write_data(

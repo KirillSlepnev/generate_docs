@@ -16,7 +16,6 @@ from app.domain.models.value_objects import (
     DatabaseSource,
     InlineData,
     OutputFormat,
-    ReportStatus,
 )
 
 
@@ -27,7 +26,7 @@ class ReportService:
         self,
         template_repo: ITemplateRepository,
         report_repo: IReportRepository,
-        message_bus: IMessageBus,
+        message_bus: IMessageBus | None,
         file_storage: IFileStorage,
         data_source: IDataSource,
         generators: dict[OutputFormat, IFileGenerate],
@@ -43,12 +42,12 @@ class ReportService:
         self,
         request: CreateReportFromDatabaseRequest,
         user_id: UUID,
-    ) -> Report:
+    ) -> Report | None:
         template_id = UUID(request.template_id)
         template = await self._template_repo.get_by_id(template_id)
 
         if template is None or template.user_id != user_id:
-            raise ValueError("Template not found")
+            return None
 
         database_sourse = DatabaseSource(
             table=request.source.table,
@@ -64,7 +63,8 @@ class ReportService:
         )
 
         await self._report_repo.add(report)
-        await self._message_bus.publish_generate_report_task(report.id)
+        if self._message_bus is not None:
+            await self._message_bus.publish_generate_report_task(report.id)
 
         return report
 
@@ -72,7 +72,7 @@ class ReportService:
         self,
         request: CreateReportFromInlineRequest,
         user_id: UUID,
-    ) -> Report:
+    ) -> Report | None:
         if len(request.data) > 1000:
             raise ValueError("Maximum 1000 rows allowed")
 
@@ -83,7 +83,7 @@ class ReportService:
         template = await self._template_repo.get_by_id(template_id)
 
         if template is None or template.user_id != user_id:
-            raise ValueError("Template not found")
+            return None
 
         inline_data = InlineData(data=request.data)
 
@@ -92,23 +92,24 @@ class ReportService:
         )
 
         await self._report_repo.add(report)
-        await self._message_bus.publish_generate_report_task(report.id)
+        if self._message_bus is not None:
+            await self._message_bus.publish_generate_report_task(report.id)
 
         return report
 
-    async def get_status(self, report_id: UUID, user_id: UUID) -> ReportStatus:
+    async def get_status(self, report_id: UUID, user_id: UUID) -> Report | None:
         report = await self._report_repo.get_by_id(report_id)
 
         if report is None or report.user_id != user_id:
-            raise ValueError("Report not found")
+            return None
 
-        return report.status
+        return report
 
-    async def get_download_url(self, report_id: UUID, user_id: UUID) -> str:
+    async def get_download_url(self, report_id: UUID, user_id: UUID) -> str | None:
         report = await self._report_repo.get_by_id(report_id)
 
         if report is None or report.user_id != user_id:
-            raise ValueError("Report not found")
+            return None
 
         if not report.can_download:
             raise ValueError(f"Report {report_id} is not ready for download")

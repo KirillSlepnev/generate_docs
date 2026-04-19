@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,7 +36,7 @@ class SQLAlchemyReportRepository(IReportRepository):
         await self._session.commit()
         await self._session.flush()
 
-    async def get_by_id(self, report_id: UUID) -> Optional[Report]:
+    async def get_by_id(self, report_id: UUID) -> Report | None:
         query = select(ReportModel).where(ReportModel.id == report_id)
         result = await self._session.execute(query)
         model = result.scalar_one_or_none()

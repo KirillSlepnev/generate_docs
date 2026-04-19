@@ -9,10 +9,12 @@ from app.domain.models.value_objects import OutputFormat
 class ColumnDefinitionSchema(BaseModel):
     """Схема для описания колонки в отчете."""
 
-    field: str = Field(..., description="Имя поля в данных")
-    header: str = Field(..., description="Заголовок колонки")
-    width: int | None = Field(None, description="Ширина колонки")
-    format: str | None = Field(None, description="Формат отображения")
+    field: str = Field(..., description="Имя поля в данных", examples=["product_name"])
+    header: str = Field(..., description="Заголовок колонки", examples=["Товар"])
+    width: int | None = Field(None, description="Ширина колонки", examples=[30])
+    format: str | None = Field(
+        None, description="Формат отображения", examples=["#,##0.00"]
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -20,10 +22,16 @@ class ColumnDefinitionSchema(BaseModel):
 class StylingConfigSchema(BaseModel):
     """Схема для настроек оформления."""
 
-    header_bg_color: str | None = Field(None, description="Цвет фона заголовка")
-    header_font_color: str | None = Field(None, description="Цвет шрифта заголовка")
-    font_size: int | None = Field(None, description="Размер шрифта")
-    orientation: str | None = Field(None, description="Ориентация страницы")
+    header_bg_color: str | None = Field(
+        None, description="Цвет фона заголовка", examples=["#4472C4"]
+    )
+    header_font_color: str | None = Field(
+        None, description="Цвет шрифта заголовка", examples=["#FFFFFF"]
+    )
+    font_size: int | None = Field(None, description="Размер шрифта", examples=[12])
+    orientation: str | None = Field(
+        None, description="Ориентация страницы", examples=["portrait"]
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
