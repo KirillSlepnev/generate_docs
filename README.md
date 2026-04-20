@@ -110,7 +110,7 @@ Redis:
 - Rate Limiting
 - Блокировки для предотвращения дублирования обработки
 
-MinIO (S3):
+aioboto3 (S3):
 - Бакет `reports`
 - Ключ объекта: `{user_id}/{year}/{month}/{task_id}.{ext}`
 - Pre-signed URL для скачивания (действует 1 час)
@@ -132,57 +132,15 @@ Grafana Dashboard:
 - Структурированные JSON-логи с `correlation_id`
 - Возможность поиска по `report_id`
 
-## Структура проекта (Clean Architecture)
-
-```
-project/
-├── domain/
-│   ├── entities.py           # ReportTemplate, Report
-│   ├── value_objects.py      # ReportStatus, SourceType, OutputFormat
-│   └── interfaces/
-│       ├── template_repository.py
-│       ├── report_repository.py
-│       ├── file_storage.py
-│       └── message_bus.py
-│
-├── application/
-│   ├── use_cases/
-│   │   ├── create_template.py
-│   │   ├── create_report.py
-│   │   ├── check_status.py
-│   │   └── get_download_url.py
-│   └── dto.py
-│
-├── infrastructure/
-│   ├── db/
-│   │   ├── models.py
-│   │   ├── template_repo.py
-│   │   └── report_repo.py
-│   ├── storage/
-│   │   └── s3_storage.py
-│   ├── queue/
-│   │   └── celery_bus.py
-│   └── celery_tasks/
-│       └── generate_report.py
-│
-├── presentation/
-│   ├── api/
-│   │   ├── routes.py
-│   │   └── dependencies.py
-│   └── schemas.py
-│
-└── docker-compose.yml
-```
-
 ## План MVP
 
-[] Окружение: `docker-compose` с Postgres, Redis, RabbitMQ, MinIO
-[] Скелет Clean Architecture: папки, интерфейсы, пустые реализации
-[] CRUD шаблонов: создание, чтение, обновление, удаление ReportTemplate
-[] Создание задачи (inline): `POST /reports` с переданными данными, синхронно
-[] Подключение очереди: отправка в RabbitMQ, Celery-воркер с заглушкой
-[] Генерация Excel: загрузка в MinIO, обновление статуса
-[] Проверка статуса и скачивание: `GET /reports/{id}` и `GET /reports/{id}/download`
+[x] Окружение: `docker-compose` с Postgres, Redis, RabbitMQ, MinIO
+[x] Скелет Clean Architecture: папки, интерфейсы, пустые реализации
+[x] CRUD шаблонов: создание, чтение, обновление, удаление ReportTemplate
+[x] Создание задачи (inline): `POST /reports` с переданными данными, синхронно
+[x] Подключение очереди: отправка в RabbitMQ
+[x] Генерация Excel: загрузка в MinIO, обновление статуса
+[x] Проверка статуса и скачивание: `GET /reports/{id}` и `GET /reports/{id}/download`
 [] Режим database: выполнение запроса к БД по шаблону
 [] Prometheus + Grafana: метрики и дашборд
 [] Kubernetes: манифесты для деплоя

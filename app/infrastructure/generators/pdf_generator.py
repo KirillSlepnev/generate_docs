@@ -104,30 +104,37 @@ class PDFGenerator(IFileGenerate):
 
         # Стили таблицы
         table_style = [
-            # Выравнивание
             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            # Границы
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("BOX", (0, 0), (-1, -1), 1, colors.black),
         ]
 
-        # Стиль заголовков
-        header_bg = (
-            colors.HexColor(styling.header_bg_color.lstrip("#"))
-            if styling and styling.header_bg_color
-            else colors.HexColor("#4472C4")
-        )
-        header_font = (
-            colors.HexColor(styling.header_font_color.lstrip("#"))
-            if styling and styling.header_font_color
-            else colors.white
-        )
+        header_bg = colors.HexColor("#4472C4")
+        if styling and styling.header_bg_color:
+            try:
+                # Убеждаемся, что есть решетка
+                color_str = styling.header_bg_color
+                if not color_str.startswith("#"):
+                    color_str = "#" + color_str
+                header_bg = colors.HexColor(color_str)
+            except (ValueError, AttributeError):
+                pass
+
+        header_font_color = colors.white
+        if styling and styling.header_font_color:
+            try:
+                color_str = styling.header_font_color
+                if not color_str.startswith("#"):
+                    color_str = "#" + color_str
+                header_font_color = colors.HexColor(color_str)
+            except (ValueError, AttributeError):
+                pass
 
         table_style.extend(
             [
                 ("BACKGROUND", (0, 0), (-1, 0), header_bg),
-                ("TEXTCOLOR", (0, 0), (-1, 0), header_font),
+                ("TEXTCOLOR", (0, 0), (-1, 0), header_font_color),
                 ("FONTNAME", (0, 0), (-1, 0), self.font_name),
                 (
                     "FONTSIZE",

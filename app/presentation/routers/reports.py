@@ -16,7 +16,8 @@ from app.presentation.dependecies import get_report_service, get_user_id
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 # user_id = c75d2c72-c193-4f95-a9f4-9bbef906edd7
-# template_id = a628349a-f929-4e42-93db-f18b0fcc19a0
+# template_id(excel) = a628349a-f929-4e42-93db-f18b0fcc19a0
+# template_id(pdf) = c15c161a-76d1-4086-b43b-e27d0452fa5c
 # report_id = 629d067b-f8ac-4ad2-b752-6aa2bd414a3a
 
 
