@@ -141,6 +141,7 @@ Grafana Dashboard:
 - [x] Подключение очереди: отправка в RabbitMQ
 - [x] Генерация Excel: загрузка в MinIO, обновление статуса
 - [x] Проверка статуса и скачивание: `GET /reports/{id}` и `GET /reports/{id}/download`
+- [ ] Логирование
 - [ ] Режим database: выполнение запроса к БД по шаблону
 - [ ] Prometheus + Grafana: метрики и дашборд
 - [ ] Kubernetes: манифесты для деплоя

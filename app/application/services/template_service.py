@@ -7,6 +7,9 @@ from app.application.schemas.report_template import (
     CreateTemplateRequest,
     UpdateTemplateRequest,
 )
+from app.infrastructure.logging.logging import get_logger
+
+logger = get_logger("template")
 
 
 class TemplateService:
@@ -45,6 +48,11 @@ class TemplateService:
         )
 
         await self._repo.add(template)
+
+        logger.info(
+            f"Template created: {template.name}",
+            extra={"template_id": str(template.id), "user_id": str(user_id)},
+        )
         return template
 
     async def update(
@@ -95,6 +103,11 @@ class TemplateService:
             raise ValueError("Template not found")
 
         await self._repo.delete(template_id)
+
+        logger.info(
+            "Template deleted",
+            extra={"template_id": str(template_id), "user_id": str(user_id)},
+        )
 
     async def get(self, template_id: UUID, user_id: UUID) -> ReportTemplate | None:
         template = await self._repo.get_by_id(template_id)

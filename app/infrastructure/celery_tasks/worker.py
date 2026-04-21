@@ -13,12 +13,16 @@ from app.infrastructure.database.repositories.template_repository import (
 from app.infrastructure.database.dependecies import scoped_session
 from app.infrastructure.generators.excel_generator import ExcelGenerator
 from app.infrastructure.generators.pdf_generator import PDFGenerator
+from app.infrastructure.logging.logging import get_logger, setup_logging
 from app.infrastructure.storage.s3_storage import S3Storage
 from app.infrastructure.data_source.sql_data_source import SQLDataSource
 from app.application.services.report_service import ReportService
 
 
 loop = asyncio.get_event_loop()
+
+setup_logging()
+logger = get_logger("celery.worker")
 
 
 async def _generate_report_async(report_id: UUID) -> None:
@@ -54,6 +58,20 @@ async def _generate_report_async(report_id: UUID) -> None:
 )
 def generate_report_task(self, report_id: str) -> None:
     try:
+        logger.info(
+            "Celery task started",
+            extra={"task_id": self.request.id, "report_id": report_id},
+        )
+
         loop.run_until_complete(_generate_report_async(UUID(report_id)))
-    except Exception as e:
-        self.retry(exc=e)
+    except Exception as exc:
+        logger.error(
+            "Celery task failed",
+            extra={
+                "task_id": self.request.id,
+                "report_id": report_id,
+                "error": str(exc),
+            },
+            exc_info=True,
+        )
+        self.retry(exc=exc)

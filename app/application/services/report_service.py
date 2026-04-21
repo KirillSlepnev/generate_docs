@@ -17,6 +17,9 @@ from app.domain.models.value_objects import (
     InlineData,
     OutputFormat,
 )
+from app.infrastructure.logging.logging import get_logger
+
+logger = get_logger("report")
 
 
 class ReportService:
@@ -49,7 +52,7 @@ class ReportService:
         if template is None or template.user_id != user_id:
             return None
 
-        database_sourse = DatabaseSource(
+        database_source = DatabaseSource(
             table=request.source.table,
             fields=request.source.fields,
             date_field=request.source.date_field,
@@ -59,10 +62,21 @@ class ReportService:
         )
 
         report = Report.create_with_database_source(
-            user_id=user_id, template_id=template_id, database_source=database_sourse
+            user_id=user_id, template_id=template_id, database_source=database_source
         )
 
         await self._report_repo.add(report)
+
+        logger.info(
+            "Report task created from database",
+            extra={
+                "report_id": str(report.id),
+                "template_id": str(template_id),
+                "user_id": str(user_id),
+                "table": database_source.table,
+            },
+        )
+
         if self._message_bus is not None:
             await self._message_bus.publish_generate_report_task(report.id)
 
@@ -92,6 +106,16 @@ class ReportService:
         )
 
         await self._report_repo.add(report)
+
+        logger.info(
+            "Report task created from inline",
+            extra={
+                "report_id": str(report.id),
+                "template_id": str(template_id),
+                "user_id": str(user_id),
+            },
+        )
+
         if self._message_bus is not None:
             await self._message_bus.publish_generate_report_task(report.id)
 
@@ -133,6 +157,11 @@ class ReportService:
         if template is None:
             raise ValueError("Template not found")
 
+        logger.info(
+            "Report generation started",
+            extra={"report_id": str(report_id)},
+        )
+
         try:
             report.start_processing()
             await self._report_repo.update(report)
@@ -170,7 +199,18 @@ class ReportService:
             report.complete(file_key)
             await self._report_repo.update(report)
 
+            logger.info(
+                "Report generated successfully",
+                extra={"report_id": str(report_id), "file_key": file_key},
+            )
+
         except Exception as e:
+            logger.error(
+                "Report generation failed",
+                extra={"report_id": str(report_id), "error": str(e)},
+                exc_info=True,
+            )
+
             report.fail(str(e))
             await self._report_repo.update(report)
             raise RuntimeError("Error in report generation", str(e))
