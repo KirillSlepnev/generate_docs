@@ -18,6 +18,7 @@ from app.domain.models.value_objects import (
     OutputFormat,
 )
 from app.infrastructure.logging.logging import get_logger
+from app.infrastructure.redis.service import CacheKeys, CacheService
 
 logger = get_logger("report")
 
@@ -80,6 +81,14 @@ class ReportService:
         if self._message_bus is not None:
             await self._message_bus.publish_generate_report_task(report.id)
 
+        pattern = CacheKeys.report_list_pattern(str(user_id))
+        await CacheService.delete_pattern(pattern)
+
+        logger.debug(
+            "Report list cache invalidated",
+            extra={"user_id": str(user_id)},
+        )
+
         return report
 
     async def create_from_inline(
@@ -119,31 +128,59 @@ class ReportService:
         if self._message_bus is not None:
             await self._message_bus.publish_generate_report_task(report.id)
 
+        pattern = CacheKeys.report_list_pattern(str(user_id))
+        await CacheService.delete_pattern(pattern)
+
+        logger.debug(
+            "Report list cache invalidated",
+            extra={"user_id": str(user_id)},
+        )
+
         return report
 
     async def get_status(self, report_id: UUID, user_id: UUID) -> Report | None:
-        report = await self._report_repo.get_by_id(report_id)
+        cache_key = CacheKeys.report_status(str(report_id), user_id=str(user_id))
 
-        if report is None or report.user_id != user_id:
-            return None
+        async def fetch_report():
+            report = await self._report_repo.get_by_id(report_id)
+            if report is None or report.user_id != user_id:
+                return None
+
+        report = await CacheService.get_or_set(cache_key, fetch_report, expire=5)
 
         return report
 
     async def get_download_url(self, report_id: UUID, user_id: UUID) -> str | None:
-        report = await self._report_repo.get_by_id(report_id)
+        cache_key = CacheKeys.report_status(str(report_id), user_id=str(user_id))
 
-        if report is None or report.user_id != user_id:
-            return None
+        async def fetch_url():
+            report = await self._report_repo.get_by_id(report_id)
 
-        if not report.can_download:
-            raise ValueError(f"Report {report_id} is not ready for download")
+            if report is None or report.user_id != user_id:
+                return None
 
-        assert report.file_key is not None
+            if not report.can_download:
+                raise ValueError(f"Report {report_id} is not ready for download")
 
-        return await self._file_storage.generate_presigned_url(report.file_key)
+            assert report.file_key is not None
+
+            return await self._file_storage.generate_presigned_url(report.file_key)
+
+        url = await CacheService.get_or_set(cache_key, fetch_url, expire=30)
+
+        return url
 
     async def user_list(self, user_id: UUID, offset: int, limit: int) -> list[Report]:
-        return await self._report_repo.list_by_user(user_id, offset, limit)
+        cache_key = CacheKeys.report_list(str(user_id), limit, offset)
+
+        async def fetch_list():
+            return await self._report_repo.list_by_user(user_id, offset, limit)
+
+        return await CacheService.get_or_set(
+            key=cache_key,
+            factory=fetch_list,
+            expire=10,
+        )
 
     async def generate(self, report_id: UUID) -> None:
         """Запуск генерации отчета, вызывается воркером"""
@@ -199,6 +236,18 @@ class ReportService:
             report.complete(file_key)
             await self._report_repo.update(report)
 
+            if report:
+                cache_key = CacheKeys.report_status(str(report_id), str(report.user_id))
+                await CacheService.delete(cache_key)
+
+                pattern = CacheKeys.report_list_pattern(str(report.user_id))
+                await CacheService.delete_pattern(pattern)
+
+                logger.debug(
+                    "Report caches invalidated after generation",
+                    extra={"report_id": str(report_id)},
+                )
+
             logger.info(
                 "Report generated successfully",
                 extra={"report_id": str(report_id), "file_key": file_key},
@@ -213,6 +262,10 @@ class ReportService:
 
             report.fail(str(e))
             await self._report_repo.update(report)
+
+            cache_key = CacheKeys.report_status(str(report_id), str(report.user_id))
+            await CacheService.delete(cache_key)
+
             raise RuntimeError("Error in report generation", str(e))
 
     async def _generate_file(self, data, columns, output_format, styling) -> bytes:

@@ -1,4 +1,5 @@
 from io import BytesIO
+import os
 from typing import Any
 
 from reportlab.lib import colors
@@ -16,13 +17,21 @@ from app.domain.repositories.generator import IFileGenerate
 
 class PDFGenerator(IFileGenerate):
     def __init__(self):
-        try:
-            pdfmetrics.registerFont(
-                TTFont("DejaVu", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
-            )
+        font_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "infrastructure",
+            "fonts",
+            "DejaVuSans.ttf",
+        )
+        font_path = os.path.abspath(font_path)
+
+        if os.path.exists(font_path):
+            pdfmetrics.registerFont(TTFont("DejaVu", font_path))
             self.font_name = "DejaVu"
-        except Exception:
-            self.font_name = "Times-Roman"
+        else:
+            self.font_name = "Helvetica"
 
     async def generate(
         self,

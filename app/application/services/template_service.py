@@ -8,6 +8,7 @@ from app.application.schemas.report_template import (
     UpdateTemplateRequest,
 )
 from app.infrastructure.logging.logging import get_logger
+from app.infrastructure.redis.service import CacheKeys, CacheService
 
 logger = get_logger("template")
 
@@ -53,6 +54,15 @@ class TemplateService:
             f"Template created: {template.name}",
             extra={"template_id": str(template.id), "user_id": str(user_id)},
         )
+
+        pattern = CacheKeys.template_list_pattern(str(user_id))
+        await CacheService.delete_pattern(pattern)
+
+        logger.debug(
+            "Template list cache invalidated",
+            extra={"user_id": str(user_id)},
+        )
+
         return template
 
     async def update(
@@ -94,6 +104,18 @@ class TemplateService:
         )
 
         await self._repo.update(template)
+
+        cache_key = CacheKeys.template(str(template_id), str(user_id))
+        await CacheService.delete(cache_key)
+
+        pattern = CacheKeys.template_list_pattern(str(user_id))
+        await CacheService.delete_pattern(pattern)
+
+        logger.debug(
+            "Template list cache invalidated",
+            extra={"user_id": str(user_id)},
+        )
+
         return template
 
     async def delete(self, template_id: UUID, user_id: UUID) -> None:
@@ -104,20 +126,42 @@ class TemplateService:
 
         await self._repo.delete(template_id)
 
+        cache_key = CacheKeys.template(str(template_id), str(user_id))
+        await CacheService.delete(cache_key)
+
+        pattern = CacheKeys.template_list_pattern(str(user_id))
+        await CacheService.delete_pattern(pattern)
+
         logger.info(
             "Template deleted",
             extra={"template_id": str(template_id), "user_id": str(user_id)},
         )
 
     async def get(self, template_id: UUID, user_id: UUID) -> ReportTemplate | None:
-        template = await self._repo.get_by_id(template_id)
+        cache_key = CacheKeys.template(str(template_id), str(user_id))
 
-        if template is None or template.user_id != user_id:
-            return None
+        async def fetch_template():
+            template = await self._repo.get_by_id(template_id)
+            if template is None or template.user_id != user_id:
+                return None
+            return template
 
-        return template
+        return await CacheService.get_or_set(
+            key=cache_key,
+            factory=fetch_template,
+            expire=60,
+        )
 
     async def list_templates(
         self, user_id: UUID, limit: int = 100, offset: int = 0
     ) -> list[ReportTemplate]:
-        return await self._repo.list_by_user(user_id, limit, offset)
+        cache_key = CacheKeys.template_list(str(user_id), limit, offset)
+
+        async def fetch_list():
+            return await self._repo.list_by_user(user_id, limit, offset)
+
+        return await CacheService.get_or_set(
+            key=cache_key,
+            factory=fetch_list,
+            expire=30,
+        )

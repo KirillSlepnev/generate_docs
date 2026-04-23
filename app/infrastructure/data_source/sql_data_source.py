@@ -9,7 +9,6 @@ class SQLDataSource(IDataSource):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    # TODO Добавить кэш
     async def _get_allowed_fields(self, table_name: str) -> set[str]:
         """Возвращает список разрешенных полей для запроса"""
         query = text("""
